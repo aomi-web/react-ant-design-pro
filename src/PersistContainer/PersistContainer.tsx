@@ -1,8 +1,7 @@
 import React, {PropsWithChildren, useContext, useEffect} from "react";
 import {observer} from "mobx-react";
-import {PageContainer, PageContainerProps} from "@ant-design/pro-layout";
-import ProForm, {ProFormProps, StepFormProps, StepsForm, StepsFormProps,} from "@ant-design/pro-form";
-import ProCard, {ProCardProps} from "@ant-design/pro-card";
+import {PageContainer, ProCard, ProForm, StepsForm} from "@ant-design/pro-components";
+import type {PageContainerProps, ProCardProps, ProFormProps, StepFormProps, StepsFormProps} from "@ant-design/pro-components";
 import {ObjectUtils} from "@aomi/utils";
 import {AntDesignProContext} from "../provider";
 import {PageOptions} from "./page";
@@ -163,11 +162,11 @@ export const PersistContainer: React.FC<PersistContainerProps> = observer(
         onBack={context?.goBack}
         {...container}
       >
-        <ProCard bordered={false} {...card}>
+        <ProCard variant="borderless" {...card}>
           {formType === FormType.DEFAULT && (
             <ProForm
               scrollToFirstError
-              {...formProps}
+              {...(formProps as ProFormProps)}
               onFinish={handleFinish}
               initialValues={initialValues}
             >

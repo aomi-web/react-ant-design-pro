@@ -1,8 +1,7 @@
 import React, { forwardRef, useContext, useRef, useState } from "react";
 import { observer } from "mobx-react";
-import { PageContainer, PageContainerProps } from "@ant-design/pro-layout";
-import ProTable, { ProTableProps } from "@ant-design/pro-table";
-import { ParamsType } from "@ant-design/pro-provider";
+import { PageContainer, ProDescriptions, ProTable } from "@ant-design/pro-components";
+import type { PageContainerProps, ParamsType, ProDescriptionsProps, ProTableProps } from "@ant-design/pro-components";
 import { hasAuthorities, ObjectUtils } from "@aomi/utils";
 import {
   Button,
@@ -20,12 +19,8 @@ import {
   InfoCircleOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { TableRowSelection } from "@ant-design/pro-table/es/typing";
 import { Stats } from "./Stats";
-import ProDescriptions, {
-  ProDescriptionsProps,
-} from "@ant-design/pro-descriptions";
-import { RowSelectMethod } from "antd/lib/table/interface";
+import type { RowSelectMethod, TableRowSelection } from "antd/lib/table/interface";
 import { AntDesignProContext, Location } from "../provider";
 import { BaseService } from "@aomi/common-service/BaseService";
 
@@ -199,12 +194,12 @@ function handleDel(
 }
 
 function renderActionButton(
-  { authorities, popconfirmProps, onClick, ...item },
-  idx
+  { authorities, popconfirmProps, onClick, ...item }: ActionButtonProps,
+  idx: number
 ) {
   if (popconfirmProps) {
     return (
-      <Popconfirm {...popconfirmProps} onConfirm={onClick}>
+      <Popconfirm {...popconfirmProps} onConfirm={onClick as any}>
         <Button key={idx} {...item} />
       </Popconfirm>
     );
@@ -347,7 +342,7 @@ export const QueryContainer: React.FC<
         record: {},
       });
 
-      const form = useRef<FormInstance>();
+      const form = useRef<FormInstance | undefined>(undefined);
 
       const { loading, page } = service || {};
 

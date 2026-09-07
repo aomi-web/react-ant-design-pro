@@ -6,11 +6,18 @@ import React, {
 } from "react";
 import { observer } from "mobx-react";
 
-import { PageContainer, PageContainerProps } from "@ant-design/pro-layout";
-import ProDescriptions, {
+import {
+  ModalForm,
+  PageContainer,
+  ProCard,
+  ProDescriptions,
+} from "@ant-design/pro-components";
+import type {
+  PageContainerProps,
+  ProCardProps,
+  ProCardTabsProps,
   ProDescriptionsProps,
-} from "@ant-design/pro-descriptions";
-import ProCard, { ProCardTabsProps } from "@ant-design/pro-card";
+} from "@ant-design/pro-components";
 
 import { Button, Col, Row, Steps, Typography } from "antd";
 import { hasAuthorities, MomentDateUtil, ObjectUtils } from "@aomi/utils";
@@ -23,16 +30,15 @@ import {
   ReviewStatus,
   ReviewStatusText,
 } from "@aomi/common-service/ReviewService";
-import { ProCardTabPaneProps } from "@ant-design/pro-card/es/typing";
-import { ModalForm } from "@ant-design/pro-form";
-
 import { defaultFields } from "../ReviewContainer/ReviewContainer";
 import { AntDesignProContext } from "../provider";
 import { Common } from "@aomi/common-service/constants";
 import { Field, FieldGroup, renderField, renderFieldGroup } from "../Form/render";
 
-export type TabPaneProps<T> = {
-  tabPaneProps: ProCardTabPaneProps;
+export type TabPaneProps<T extends Record<string, any>> = {
+  tabPaneProps: NonNullable<ProCardTabsProps['items']>[number] & {
+    cardProps?: ProCardProps;
+  };
 
   descriptionsProps?: Omit<ProDescriptionsProps<T>, "columns">;
   /**
@@ -55,7 +61,7 @@ export type TabPaneProps<T> = {
   >;
 };
 
-export type ReviewDetailContainerProps<T> = {
+export type ReviewDetailContainerProps<T extends Record<string, any>> = {
   /**
    * 页面容器props
    */
@@ -109,70 +115,60 @@ function renderHeader<T>({
 
   const { chain = [] } = reviewProcess || {};
 
-  return (
-    <>
-      {/*{renderDescriptions(headerDescriptions)}*/}
-      <Steps>
-        <Steps.Step
-          status="finish"
-          title={describe}
-          description={
-            <div style={{ fontSize: 12 }}>
-              <div>{ObjectUtils.getValue(first, "user.name")}</div>
-              <div>{first.describe}</div>
-              <div>
-                {MomentDateUtil.format(first.reviewAt, Common.DATETIME_FORMAT)}
-              </div>
+  const items: any[] = [
+    {
+      status: "finish",
+      title: describe,
+      content: (
+        <div style={{ fontSize: 12 }}>
+          <div>{ObjectUtils.getValue(first, "user.name")}</div>
+          <div>{first.describe}</div>
+          <div>
+            {MomentDateUtil.format(first.reviewAt, Common.DATETIME_FORMAT)}
+          </div>
+        </div>
+      ),
+    },
+    ...chain.map(({ describe, roleName, userName }, index) => {
+      const h = histories.length > index + 1 ? histories[index + 1] : null;
+      let content;
+      let stepStatus;
+      if (h) {
+        stepStatus = h.result === ReviewResult.RESOLVE ? "finish" : "error";
+        content = (
+          <div style={{ fontSize: 12 }}>
+            <div>{ObjectUtils.getValue(h, "user.name")}</div>
+            <div>{`${ReviewResultText[h.result]}原因: ${h.describe}`}</div>
+            <div>
+              {MomentDateUtil.format(h.reviewAt, Common.DATETIME_FORMAT)}
             </div>
-          }
-        />
-        {chain.map(({ describe, roleName, userName }, index) => {
-          const h = histories.length > index + 1 ? histories[index + 1] : null;
-          let d, s;
-          if (h) {
-            s = h.result === ReviewResult.RESOLVE ? "finish" : "error";
-            d = (
-              <div style={{ fontSize: 12 }}>
-                <div>{ObjectUtils.getValue(h, "user.name")}</div>
-                <div>{`${ReviewResultText[h.result]}原因: ${h.describe}`}</div>
-                <div>
-                  {MomentDateUtil.format(h.reviewAt, Common.DATETIME_FORMAT)}
-                </div>
-              </div>
-            );
-          } else {
-            s = result === ReviewResult.REJECTED ? "error" : "wait";
-            d = [roleName, userName].join("/");
-          }
-          return (
-            <Steps.Step
-              status={s}
-              title={describe}
-              description={d}
-              key={index}
-            />
-          );
-        })}
-        <Steps.Step
-          status={
-            status === ReviewStatus.FINISH
-              ? result === ReviewResult.RESOLVE
-                ? "finish"
-                : "error"
-              : "wait"
-          }
-          title={ReviewStatusText.FINISH}
-          icon={
-            result === ReviewResult.REJECTED ? (
-              <MehOutlined />
-            ) : (
-              <SmileOutlined />
-            )
-          }
-        />
-      </Steps>
-    </>
-  );
+          </div>
+        );
+      } else {
+        stepStatus = result === ReviewResult.REJECTED ? "error" : "wait";
+        content = [roleName, userName].join("/");
+      }
+      return {
+        status: stepStatus,
+        title: describe,
+        content,
+        key: index,
+      };
+    }),
+    {
+      status:
+        status === ReviewStatus.FINISH
+          ? result === ReviewResult.RESOLVE
+            ? "finish"
+            : "error"
+          : "wait",
+      title: ReviewStatusText.FINISH,
+      icon:
+        result === ReviewResult.REJECTED ? <MehOutlined /> : <SmileOutlined />,
+    },
+  ];
+
+  return <Steps items={items} />;
 }
 
 /**
@@ -271,14 +267,76 @@ export const ReviewDetailContainer: React.FC<
     );
   }
 
+  const tabPanes: Array<TabPaneProps<any>> = getTabPaneProps(reviewData);
+
+  const tabItems: any[] = (tabPanes || []).map(
+    ({ tabPaneProps, descriptionsProps, columnGroups }, idx) => {
+      const {
+        tab,
+        tabKey,
+        key,
+        cardProps,
+        ...tabProps
+      } = (tabPaneProps || {}) as any;
+
+      const content = (
+        <Row gutter={30}>
+          <Col span={12}>
+            {before && (
+              <Typography.Title level={4}>{"变更前"}</Typography.Title>
+            )}
+            {before &&
+              columnGroups?.map(({ render, ...item }, index) =>
+                render ? (
+                  render({ before: true, review: reviewData })
+                ) : (
+                  <ProDescriptions
+                    column={2}
+                    dataSource={before}
+                    {...descriptionsProps}
+                    key={index}
+                    {...item}
+                    editable={undefined}
+                  />
+                )
+              )}
+          </Col>
+          <Col span={before ? 12 : 24}>
+            <Typography.Title level={4}>{"变更后"}</Typography.Title>
+            {after &&
+              columnGroups?.map(({ render, ...item }, index) =>
+                render ? (
+                  render({ after: true, review: reviewData })
+                ) : (
+                  <ProDescriptions
+                    column={before ? 2 : 4}
+                    dataSource={after}
+                    {...descriptionsProps}
+                    key={index}
+                    {...item}
+                  />
+                )
+              )}
+          </Col>
+        </Row>
+      );
+
+      return {
+        ...tabProps,
+        key: key ?? tabKey ?? String(idx),
+        label: tab,
+        children: cardProps ? <ProCard {...cardProps}>{content}</ProCard> : content,
+      };
+    }
+  );
+
   const newTabs: ProCardTabsProps = {
     tabPosition: "top",
     ...tabs,
+    items: tabItems,
     activeKey: tabActiveKey,
     onChange: setTabActiveKey,
   };
-
-  const tabPanes: Array<TabPaneProps<any>> = getTabPaneProps(reviewData);
 
   return (
     <PageContainer
@@ -288,53 +346,7 @@ export const ReviewDetailContainer: React.FC<
       onBack={context?.goBack}
       {...container}
     >
-      <ProCard tabs={newTabs}>
-        {tabPanes?.map(
-          ({ tabPaneProps, descriptionsProps, columnGroups }, idx) => (
-            <ProCard.TabPane {...tabPaneProps}>
-              <Row gutter={30}>
-                <Col span={12}>
-                  {before && (
-                    <Typography.Title level={4}>{"变更前"}</Typography.Title>
-                  )}
-                  {before &&
-                    columnGroups?.map(({ render, ...item }, index) =>
-                      render ? (
-                        render({ before: true, review: reviewData })
-                      ) : (
-                        <ProDescriptions
-                          column={2}
-                          dataSource={before}
-                          {...descriptionsProps}
-                          key={index}
-                          {...item}
-                          editable={undefined}
-                        />
-                      )
-                    )}
-                </Col>
-                <Col span={before ? 12 : 24}>
-                  <Typography.Title level={4}>{"变更后"}</Typography.Title>
-                  {after &&
-                    columnGroups?.map(({ render, ...item }, index) =>
-                      render ? (
-                        render({ after: true, review: reviewData })
-                      ) : (
-                        <ProDescriptions
-                          column={before ? 2 : 4}
-                          dataSource={after}
-                          {...descriptionsProps}
-                          key={index}
-                          {...item}
-                        />
-                      )
-                    )}
-                </Col>
-              </Row>
-            </ProCard.TabPane>
-          )
-        )}
-      </ProCard>
+      <ProCard tabs={newTabs} />
       {children}
       <ModalForm
         open={visible}

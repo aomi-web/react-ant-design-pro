@@ -1,14 +1,12 @@
-import React from "react";
+import React, {ReactNode} from "react";
 import {ListFieldOptions, PageOptions} from "../PersistContainer";
-import {ProFormItemProps} from "@ant-design/pro-form/es/components";
-import ProForm, {ProFormFieldProps, ProFormListProps} from "@ant-design/pro-form";
+import {ProForm, ProFormDependency, ProFormList} from "@ant-design/pro-components";
+import type {GroupProps as ProFormGroupProps, ProFormFieldProps, ProFormListProps, ProFormItemProps} from "@ant-design/pro-components";
 import {FormInstance, FormRule} from "antd";
-import {ProFormDependency, ProFormList} from "@ant-design/pro-form/lib";
-import type {ProFormFieldItemProps, ProFormGroupProps} from "@ant-design/pro-form/es/typing";
 import {renderFormField} from "./renderFormItem";
 
 export type FieldType =
-  | ProFormItemProps["valueType"]
+  | ProFormFieldProps["valueType"]
   | "uploadDragger"
   | "uploadButton"
   // 自定义组件, 和valueTypeMap中对应
@@ -17,6 +15,7 @@ export type FieldType =
   | "feeRate";
 
 export type Field = {
+  group?: false
   /**
    * 字段类型
    * @deprecated 使用 valueType
@@ -84,7 +83,7 @@ export type Field = {
   //  * 自定义渲染field的相关属性，提供以后根据属性自动渲染
   //  */
   // proFormFieldProps?: ProFormFieldProps;
-} & ProFormFieldItemProps &
+} & ProFormItemProps &
   Omit<ProFormFieldProps, "valueType">;
 
 export type FieldGroup = {
@@ -139,16 +138,13 @@ export type RenderFieldGroupOption = RenderFieldOption & {
  * 渲染一个字段
  * @param args 字段参数
  * @param index 下标
- * @param pageOptions 页面参数
- * @param grid 是否使用grid布局
- * @param defaultWidth 默认宽度
- * @param defaultColProps 默认col
+ * @param options 页面参数
  */
 export function renderField(
   args: Field,
   index: number,
   options: RenderFieldOption
-) {
+): Array<ReactNode> | ReactNode {
   const {
     renderDependencyField,
     renderField: renderFieldComponent,
@@ -207,7 +203,7 @@ export function renderField(
 
   if (renderDependencyField) {
     return (
-      <ProFormDependency name={dependencyName || []} key={index}>
+      <ProFormDependency name={dependencyName || []} key={index} tooltip={field.tooltip}>
         {(dependencyFieldValues, form) =>
           renderDependencyField(
             fieldOptions,
@@ -229,7 +225,8 @@ export function renderField(
   }
   if (Array.isArray(subFieldGroups) && subFieldGroups.length > 0) {
     return (
-      <ProFormList key={index} {...formListProps} name={field.name || "list"}>
+      <ProFormList key={index} label={field.label} tooltip={field.tooltip} {...formListProps}
+                   name={field.name || "list"}>
         {(meta, idx, action, count) => {
           return subFieldGroups.map((item, idx) =>
             renderFieldGroup(item, idx, {
@@ -246,15 +243,15 @@ export function renderField(
       </ProFormList>
     );
   }
-  return (
-    <React.Fragment key={index}>{renderFormField(fieldOptions)}</React.Fragment>
-  );
+  return renderFormField(fieldOptions, index)
 }
 
 /**
  * 渲染ProForm.Group
  * @param fields 字段
  * @param titleRender
+ * @param defaultWidth
+ * @param defaultColProps
  * @param props 其他额皮质
  * @param index 组索引
  * @param options 页面选项

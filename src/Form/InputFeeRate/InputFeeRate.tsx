@@ -31,7 +31,7 @@ export function validator(rule, value) {
         return Promise.reject("每笔最高收费必须大于每笔最低收费");
       }
     }
-  } catch (e) {
+  } catch (e: any) {
     return Promise.reject(e.error);
   }
   return Promise.resolve();

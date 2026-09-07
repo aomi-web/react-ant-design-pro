@@ -1,5 +1,5 @@
 import React from "react";
-import { ProRenderFieldPropsType } from "@ant-design/pro-provider";
+import { ProRenderFieldPropsType } from "@ant-design/pro-components";
 import { AutoComplete, Transfer } from "antd";
 
 /**
@@ -7,12 +7,12 @@ import { AutoComplete, Transfer } from "antd";
  */
 export const valueTypeMap: Record<string, ProRenderFieldPropsType> = {
   autoComplete: {
-    renderFormItem(text, props) {
+    formItemRender(text, props) {
       return <AutoComplete value={text} {...props} {...props.fieldProps} />;
     },
   },
   transfer: {
-    renderFormItem(text, props) {
+    formItemRender(text, props) {
       return (
         <Transfer
           targetKeys={text}

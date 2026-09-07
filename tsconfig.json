@@ -7,6 +7,7 @@
     "esModuleInterop": true,
     "moduleResolution": "NodeNext",
     "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
     "strictNullChecks": true,
     "noUnusedLocals": true,
     "noUnusedParameters": false,

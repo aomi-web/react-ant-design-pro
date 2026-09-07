@@ -1,29 +1,33 @@
 import React from "react";
-import { Field } from "./render";
+import {Field} from "./render";
 import {
   ProFormField,
   ProFormUploadButton,
   ProFormUploadDragger,
-} from "@ant-design/pro-form";
-import { InputFeeRate } from "./InputFeeRate/InputFeeRate";
+} from "@ant-design/pro-components";
+import {InputFeeRate} from "./InputFeeRate/InputFeeRate";
 
 export function renderFormField({
-  type = "text",
-  valueType,
-  fieldProps,
-  ...props
-}: Field) {
+                                  type = "text",
+                                  valueType,
+                                  fieldProps,
+                                  ...props
+                                }: Field, key?: any) {
   const vt = valueType || type || "text";
   const newFieldProps = fieldProps ?? {};
 
   if (vt === "uploadDragger") {
     return (
-      <ProFormUploadDragger {...(props as any)} fieldProps={newFieldProps} />
+      <ProFormUploadDragger {...(props as any)} fieldProps={newFieldProps} key={key}/>
     );
   }
   if (vt === "uploadButton") {
     return (
-      <ProFormUploadButton {...(props as any)} fieldProps={newFieldProps} />
+      React.createElement(ProFormUploadButton as any, {
+        ...(props as any),
+        fieldProps: newFieldProps,
+        key,
+      })
     );
   }
   if (vt === "transfer") {
@@ -31,16 +35,16 @@ export function renderFormField({
       newFieldProps.transferRender ?? newFieldProps.render;
   }
   if (vt === "feeRate") {
-    props.renderFormItem = (_, config) => {
+    props.formItemRender = (_, config) => {
       return <InputFeeRate {...fieldProps} {...config} />;
     };
   }
   if (props.render) {
     console.warn(
-      `[render] is deprecated, please use [renderFormItem] instead.`,
+      `[render] is deprecated, please use [formItemRender] instead.`,
       props
     );
   }
 
-  return <ProFormField valueType={vt} fieldProps={newFieldProps} {...props} />;
+  return <ProFormField valueType={vt} fieldProps={newFieldProps} {...props} key={key}/>;
 }

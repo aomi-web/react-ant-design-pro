@@ -1,7 +1,7 @@
 import React, { PropsWithChildren, useState } from "react";
 import { Progress } from "antd";
-import { ModalForm } from "@ant-design/pro-form";
-import { ProColumns } from "@ant-design/pro-table/lib/typing";
+import { ModalForm } from "@ant-design/pro-components";
+import type { ParamsType, ProColumns } from "@ant-design/pro-components";
 
 import {
   ResourceReviewStatusText,
@@ -23,7 +23,6 @@ import {
   renderField,
   renderFieldGroup,
 } from "../Form/render";
-import { ParamsType } from "@ant-design/pro-provider";
 
 export type ReviewContainerProps<T, U extends ParamsType> = {
   /**

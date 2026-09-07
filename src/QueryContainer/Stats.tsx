@@ -1,8 +1,9 @@
-import ProDescriptions, { ProDescriptionsItemProps, ProDescriptionsProps } from '@ant-design/pro-descriptions';
+import { ProDescriptions } from '@ant-design/pro-components';
+import type { ProDescriptionsColumn, ProDescriptionsProps } from '@ant-design/pro-components';
 import { Card } from 'antd';
 import React from 'react';
 
-export const DEFAULT_COLUMNS: Array<ProDescriptionsItemProps> = [{
+export const DEFAULT_COLUMNS: Array<ProDescriptionsColumn> = [{
   label: '总记录数',
   dataIndex: 'totalElements',
   valueType: 'digit'

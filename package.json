@@ -1,6 +1,6 @@
 {
   "name": "@aomi/react-pro-ant-design",
-  "version": "2.2.14",
+  "version": "3.0.0-beta.1",
   "repository": "git@github.com:aomi-web/react-pro-ant-design.git",
   "author": "sean <sean.snow@live.com>",
   "license": "MIT",
@@ -48,30 +48,26 @@
   ],
   "scripts": {
     "clean": "rm -rf es lib",
-    "build": "yarn esm && yarn cjs",
+    "build": "pnpm esm && pnpm cjs",
     "esm": "rm -rf es && tsc -d",
     "cjs": "rm -rf lib && tsc --project tsconfig.cjs.json",
     "watch": "tsc -d && tsc -w",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
-    "@ant-design/icons": "^5.4.0",
-    "@ant-design/pro-card": "^2.8.6",
-    "@ant-design/pro-descriptions": "^2.5.49",
-    "@ant-design/pro-field": "^2.15.2",
-    "@ant-design/pro-form": "^2.28.4",
-    "@ant-design/pro-layout": "^7.19.11",
-    "@ant-design/pro-table": "^3.16.5",
+    "@ant-design/icons": "^6.3.4",
+    "@ant-design/pro-components": "3.1.14-7",
     "@aomi/common-service": "^1.0.23",
     "@aomi/react-antd": "^1.0.15",
     "@aomi/utils": "^1.0.10",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "antd": "^5.19.3",
-    "mobx-react": "^9.1.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "typescript": "^5.5.4"
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "antd": "^6.6.3",
+    "mobx": "^7.0.3",
+    "mobx-react": "^10.0.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "typescript": "^7.0.2"
   },
-  "packageManager": "yarn@1.22.22"
+  "packageManager": "pnpm@12.3.4"
 }

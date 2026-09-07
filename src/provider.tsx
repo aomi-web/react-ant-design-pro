@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import ProConfigContext from "@ant-design/pro-provider";
+import { ProProvider } from "@ant-design/pro-components";
 import { valueTypeMap } from "./Form/valueTypeMap";
 
 export type Location = {
@@ -33,7 +33,7 @@ export function AntDesignProProvider({
   children,
   ...value
 }: React.PropsWithChildren<AntDesignProProviderValue>) {
-  const context = useContext(ProConfigContext);
+  const context = useContext(ProProvider);
   context.valueTypeMap = {
     ...context.valueTypeMap,
     ...valueTypeMap,
