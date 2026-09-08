@@ -1,14 +1,30 @@
 import React, {PropsWithChildren, useContext, useEffect} from "react";
 import {observer} from "mobx-react";
-import {PageContainer, ProCard, ProForm, StepsForm} from "@ant-design/pro-components";
-import type {PageContainerProps, ProCardProps, ProFormProps, StepFormProps, StepsFormProps} from "@ant-design/pro-components";
+import {
+  BetaSchemaForm,
+  PageContainer,
+  ProCard,
+} from "@ant-design/pro-components";
+import type {
+  PageContainerProps,
+  ProCardProps,
+  ProFormColumnsType,
+  ProFormProps,
+  StepFormProps,
+  StepsFormProps
+} from "@ant-design/pro-components";
 import {ObjectUtils} from "@aomi/utils";
 import {AntDesignProContext} from "../provider";
-import {PageOptions} from "./page";
-import {Field, FieldGroup, renderFieldGroup} from "../Form/render";
+import type {PageOptions} from "./page";
+
+const FormSchema = BetaSchemaForm as any;
 
 export type StepsFieldGroup = StepFormProps & {
-  fieldGroups?: Array<FieldGroup>;
+  fieldGroups?: Array<ProFormColumnsType>;
+  /**
+   * 兼容旧写法，推荐使用 stepProps.title
+   */
+  title?: React.ReactNode;
 };
 
 export enum FormType {
@@ -58,16 +74,20 @@ export type PersistContainerProps = {
   /**
    * 默认组件宽度 当grid为false时生效
    */
-  defaultWidth?: Field["width"];
+  defaultWidth?: ProFormColumnsType["width"];
   /**
    * 默认组件col配置 当grid为true时生效
    */
-  defaultColProps?: Field["colProps"];
+  defaultColProps?: ProFormColumnsType["colProps"];
+  /**
+   * 默认 colSize，业务列未显式设置时使用
+   */
+  defaultColSize?: number;
 
   /**
    * 表单字段信息
    */
-  fieldGroups?: Array<FieldGroup>;
+  fieldGroups?: Array<ProFormColumnsType>;
 
   /**
    * 分步表单字段信息
@@ -80,7 +100,6 @@ export type PersistContainerProps = {
 
   location?: Location;
 };
-
 
 /**
  * 新增、编辑页面
@@ -103,8 +122,7 @@ export const PersistContainer: React.FC<PersistContainerProps> = observer(
       formProps,
       fieldGroups = [],
       stepsFieldGroups = [],
-      defaultWidth,
-      defaultColProps,
+      defaultWidth = "md",
 
       onFinish,
       getInitialValues,
@@ -118,6 +136,29 @@ export const PersistContainer: React.FC<PersistContainerProps> = observer(
     const pageOptions = {
       created: pathname.endsWith("create"),
       updated: pathname.endsWith("update"),
+    };
+
+    const applyDefaultValue = (columns: ProFormColumnsType[]) => {
+      return columns.map((col) => ({
+        ...col,
+        width: col.width ?? defaultWidth,
+        fieldProps: (form: any, schema: any) => {
+          const nextFieldProps =
+            typeof col.fieldProps === "function"
+              ? col.fieldProps(form, schema)
+              : col.fieldProps || {};
+          return {
+            ...nextFieldProps,
+            style: {
+              width: col.width ?? defaultWidth,
+              ...(nextFieldProps.style || {}),
+            },
+          };
+        },
+        ...(Array.isArray(col.columns)
+          ? {columns: applyDefaultValue(col.columns)}
+          : {}),
+      }));
     };
 
     useEffect(() => {
@@ -146,10 +187,10 @@ export const PersistContainer: React.FC<PersistContainerProps> = observer(
 
     async function handleFinish(values) {
       onFinish &&
-        (await onFinish(
-          ObjectUtils.deepmerge(initialValues, values),
-          pageOptions
-        ));
+      (await onFinish(
+        ObjectUtils.deepmerge(initialValues, values),
+        pageOptions
+      ));
     }
 
     const title = pageOptions.created ? createTitle : editTitle;
@@ -164,44 +205,31 @@ export const PersistContainer: React.FC<PersistContainerProps> = observer(
       >
         <ProCard variant="borderless" {...card}>
           {formType === FormType.DEFAULT && (
-            <ProForm
+            <FormSchema
               scrollToFirstError
               {...(formProps as ProFormProps)}
               onFinish={handleFinish}
               initialValues={initialValues}
-            >
-              {fieldGroups.map((item, index) =>
-                renderFieldGroup(item, index, {
-                  pageOptions,
-                  grid: (formProps ?? ({} as any)).grid,
-                  defaultWidth,
-                  defaultColProps,
-                })
-              )}
-            </ProForm>
+              columns={applyDefaultValue(fieldGroups)}
+            />
           )}
           {formType === FormType.STEP && (
-            <StepsForm
+            <FormSchema
+              layoutType="StepsForm"
               {...(formProps as StepsFormProps)}
               onFinish={handleFinish}
-            >
-              {stepsFieldGroups.map(({ fieldGroups = [], ...item }, index) => (
-                <StepsForm.StepForm
-                  initialValues={initialValues}
-                  {...item}
-                  key={index}
-                >
-                  {fieldGroups.map((group, idx) =>
-                    renderFieldGroup(group, idx, {
-                      pageOptions,
-                      grid: (formProps ?? ({} as any)).grid,
-                      defaultWidth,
-                      defaultColProps,
-                    })
-                  )}
-                </StepsForm.StepForm>
-              ))}
-            </StepsForm>
+              steps={stepsFieldGroups.map(({fieldGroups, title, stepProps, ...item}) => ({
+                ...item,
+                stepProps: {
+                  title,
+                  ...stepProps,
+                },
+                initialValues,
+              }))}
+              columns={stepsFieldGroups.map(({fieldGroups = []}) =>
+                applyDefaultValue(fieldGroups),
+              )}
+            />
           )}
         </ProCard>
         {children}

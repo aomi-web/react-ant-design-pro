@@ -1,6 +1,6 @@
 import React, { PropsWithChildren, useState } from "react";
 import { Progress } from "antd";
-import { ModalForm } from "@ant-design/pro-components";
+import { BetaSchemaForm } from "@ant-design/pro-components";
 import type { ParamsType, ProColumns } from "@ant-design/pro-components";
 
 import {
@@ -18,11 +18,10 @@ import {
   QueryContainerProps,
 } from "../QueryContainer";
 import {
-  Field,
-  FieldGroup,
-  renderField,
-  renderFieldGroup,
-} from "../Form/render";
+  column,
+  groupFields,
+} from "../Form/schema";
+import type {ProFormColumnsType} from "@ant-design/pro-components";
 
 export type ReviewContainerProps<T, U extends ParamsType> = {
   /**
@@ -50,8 +49,8 @@ export type ReviewContainerProps<T, U extends ParamsType> = {
   getReviewFieldGroups?: (
     review: Review<T>,
     result: ReviewResult,
-    defaultFields: Array<Field>
-  ) => Array<FieldGroup>;
+    defaultFields: Array<ProFormColumnsType>
+  ) => Array<ProFormColumnsType>;
 
   /**
    * 获取动作按钮
@@ -150,12 +149,12 @@ const COMMON_COLUMNS: Array<ProColumns> = [
   },
 ];
 
-export const defaultFields = [
-  {
+export const defaultFields: Array<ProFormColumnsType> = [
+  column({
     label: "审核结果说明",
     name: "resultDescribe",
     required: true,
-  },
+  }),
 ];
 
 export const ReviewContainer: React.FC<
@@ -255,13 +254,24 @@ export const ReviewContainer: React.FC<
     });
   }
 
+  const reviewFieldGroups = getReviewFieldGroups
+    ? getReviewFieldGroups(
+        state.review as any,
+        state.result,
+        defaultFields
+      ) || []
+    : [groupFields(undefined, defaultFields)];
+
+  const reviewColumns = reviewFieldGroups;
+
   return (
     <QueryContainer
       table={table}
       {...args}
       getActionButtonProps={getActionButtonProps}
     >
-      <ModalForm
+      <BetaSchemaForm
+        layoutType="ModalForm"
         open={state.visible}
         title={`${reviewTitle ? `${reviewTitle} -` : ""}${
           ReviewResultText[state.result]
@@ -277,24 +287,8 @@ export const ReviewContainer: React.FC<
           },
           submitButtonProps: {},
         }}
-      >
-        {getReviewFieldGroups
-          ? (
-              getReviewFieldGroups(
-                state.review as any,
-                state.result,
-                defaultFields
-              ) || []
-            ).map((group, index) =>
-              renderFieldGroup(group, index, {
-                pageOptions: {
-                  created: true,
-                  updated: false,
-                },
-              })
-            )
-          : defaultFields.map((field, index) => renderField(field, index, {}))}
-      </ModalForm>
+        columns={reviewColumns}
+      />
     </QueryContainer>
   );
 };

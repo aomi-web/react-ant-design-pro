@@ -7,7 +7,7 @@ import React, {
 import { observer } from "mobx-react";
 
 import {
-  ModalForm,
+  BetaSchemaForm,
   PageContainer,
   ProCard,
   ProDescriptions,
@@ -33,7 +33,8 @@ import {
 import { defaultFields } from "../ReviewContainer/ReviewContainer";
 import { AntDesignProContext } from "../provider";
 import { Common } from "@aomi/common-service/constants";
-import { Field, FieldGroup, renderField, renderFieldGroup } from "../Form/render";
+import type { ProFormColumnsType } from "@ant-design/pro-components";
+import { groupFields } from "../Form/schema";
 
 export type TabPaneProps<T extends Record<string, any>> = {
   tabPaneProps: NonNullable<ProCardTabsProps['items']>[number] & {
@@ -100,8 +101,8 @@ export type ReviewDetailContainerProps<T extends Record<string, any>> = {
   getReviewFieldGroups?: (
     review: Review<T>,
     result: ReviewResult,
-    defaultFields: Array<Field>
-  ) => Array<FieldGroup>;
+    defaultFields: Array<ProFormColumnsType>
+  ) => Array<ProFormColumnsType>;
 };
 
 function renderHeader<T>({
@@ -338,6 +339,12 @@ export const ReviewDetailContainer: React.FC<
     onChange: setTabActiveKey,
   };
 
+  const reviewFieldGroups = getReviewFieldGroups
+    ? getReviewFieldGroups(reviewData, result, defaultFields) || []
+    : [groupFields(undefined, defaultFields)];
+
+  const reviewColumns = reviewFieldGroups;
+
   return (
     <PageContainer
       subTitle={reviewData.describe}
@@ -348,7 +355,8 @@ export const ReviewDetailContainer: React.FC<
     >
       <ProCard tabs={newTabs} />
       {children}
-      <ModalForm
+      <BetaSchemaForm
+        layoutType="ModalForm"
         open={visible}
         title={`执行审核 - ${ReviewResultText[result]}`}
         modalProps={{
@@ -360,16 +368,8 @@ export const ReviewDetailContainer: React.FC<
             submitText: ReviewResultText[result],
           },
         }}
-      >
-        {getReviewFieldGroups
-          ? (getReviewFieldGroups(reviewData, result, defaultFields) || []).map(
-              (group, index) =>
-                renderFieldGroup(group, index, {
-                  pageOptions: { created: true, updated: false },
-                })
-            )
-          : defaultFields.map((field, index) => renderField(field, index, {}))}
-      </ModalForm>
+        columns={reviewColumns}
+      />
     </PageContainer>
   );
 });
