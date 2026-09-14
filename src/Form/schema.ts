@@ -41,23 +41,29 @@ export function column(input: ColumnInput): ProFormColumnsType {
     ...rest
   } = input;
 
-  const rules = required
-    ? [{required: true, message: `${label || ""} 是必填字段`}]
-    : [];
-
   return {
     ...rest,
     valueType: valueType || type || "text",
     name,
     dataIndex: name,
     title: label,
-    formItemProps: (form: any, schema: any) => ({
-      ...(typeof formItemProps === "function"
-        ? formItemProps(form, schema)
-        : formItemProps || {}),
-      hidden: createHidden ? isCreatePage() : undefined,
-      rules: [...rules, ...((formItemProps as any)?.rules || [])],
-    }),
+    formItemProps: (form: any, schema: any) => {
+      const nextFormItemProps =
+        typeof formItemProps === "function"
+          ? formItemProps(form, schema)
+          : formItemProps || {};
+      const hidden = createHidden ? isCreatePage() : undefined;
+      const requiredRules =
+        required && !hidden
+          ? [{ required: true, message: `${label || ""} 是必填字段` }]
+          : [];
+
+      return {
+        ...nextFormItemProps,
+        hidden,
+        rules: [...requiredRules, ...(nextFormItemProps?.rules || [])],
+      };
+    },
     fieldProps: (form: any, schema: any) => ({
       ...(typeof fieldProps === "function"
         ? fieldProps(form, schema)
