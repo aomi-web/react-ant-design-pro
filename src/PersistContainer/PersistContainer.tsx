@@ -129,10 +129,10 @@ export const PersistContainer: React.FC<
 
   return (
     <PageContainer
+      {...container}
       title={title}
       subTitle={subtitle}
       onBack={context?.goBack}
-      {...container}
     >
       <ProCard variant="borderless" {...card}>
         {formType === FormType.DEFAULT && (
