@@ -25,6 +25,16 @@
       "types": "./types/QueryContainer/index.d.ts",
       "require": "./lib/QueryContainer/index.js"
     },
+    "./ReviewContainer": {
+      "import": "./es/ReviewContainer/index.js",
+      "types": "./types/ReviewContainer/index.d.ts",
+      "require": "./lib/ReviewContainer/index.js"
+    },
+    "./ReviewDetailContainer": {
+      "import": "./es/ReviewDetailContainer/index.js",
+      "types": "./types/ReviewDetailContainer/index.d.ts",
+      "require": "./lib/ReviewDetailContainer/index.js"
+    },
     "./provider": {
       "import": "./es/provider.js",
       "types": "./types/provider.d.ts",
@@ -47,9 +57,14 @@
   "devDependencies": {
     "@ant-design/icons": "^6.3.4",
     "@ant-design/pro-components": "3.1.14-7",
+    "@aomi/common-service": "^1.0.23",
+    "@aomi/react-antd": "^1.0.15",
+    "@aomi/utils": "^1.0.10",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "antd": "^6.6.3",
+    "mobx": "^7.0.3",
+    "mobx-react": "^10.0.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "typescript": "^7.0.2"

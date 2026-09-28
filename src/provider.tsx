@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useContext } from "react";
+import { ProProvider } from "@ant-design/pro-components";
+import { valueTypeMap } from "./Form/valueTypeMap";
 
 /**
  * 框架无关的路由抽象，由宿主应用注入：
@@ -33,6 +35,10 @@ export function AntDesignProProvider({
   children,
   ...value
 }: React.PropsWithChildren<AntDesignProProviderValue>) {
+  const context = useContext(ProProvider);
+  if (context) {
+    context.valueTypeMap = { ...(context.valueTypeMap || {}), ...valueTypeMap };
+  }
   return (
     <AntDesignProContext.Provider value={value}>
       {children}
