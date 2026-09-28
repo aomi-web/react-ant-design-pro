@@ -258,7 +258,7 @@ export const QueryContainer: React.FC<
         bordered
         dateFormatter={false}
         actionRef={actionRef}
-        scroll={{ x: true, scrollToFirstRowOnChange: true }}
+        scroll={{ x: "max-content", scrollToFirstRowOnChange: true }}
         columns={tableColumns}
         rowSelection={newRowSelection}
         toolbar={{ actions, ...toolbar }}
