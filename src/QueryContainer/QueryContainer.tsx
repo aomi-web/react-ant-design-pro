@@ -18,13 +18,9 @@ import {
   ModalProps,
   Popconfirm,
   PopconfirmProps,
+  Space,
 } from "antd";
-import {
-  DeleteOutlined,
-  EditOutlined,
-  InfoCircleOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 import type {
   RowSelectMethod,
   TableRowSelection,
@@ -114,9 +110,6 @@ export const QueryContainer: React.FC<
     children,
   } = props;
 
-  const [selectedRows, setSelectedRows] = useState<Array<any>>([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<Array<string>>([]);
-  const [rowSelectMethod, setRowSelectMethod] = useState<RowSelectMethod>();
   const [detailConfig, setDetailConfig] = useState({
     visible: false,
     record: {},
@@ -129,29 +122,75 @@ export const QueryContainer: React.FC<
     ...otherTable
   } = table || {};
 
-  const state = { selectedRows, selectedRowKeys, rowSelectMethod };
+  const renderButtons = (buttons: Array<ActionButtonProps>) =>
+    buttons
+      .filter((item) =>
+        item.authorities ? hasAuthorities(item.authorities) : true,
+      )
+      .map(({ popconfirmProps, onClick, ...item }, idx) =>
+        popconfirmProps ? (
+          <Popconfirm key={idx} {...popconfirmProps} onConfirm={onClick as any}>
+            <Button {...item} />
+          </Popconfirm>
+        ) : (
+          <Button key={idx} {...item} onClick={onClick} />
+        ),
+      );
 
-  const buttonProps: Array<ActionButtonProps> = [];
-  getActionButtonProps && buttonProps.push(...getActionButtonProps(state));
+  // 行内动作：编辑 / 删除 / 详情 / 启停 / 自定义
+  const renderRowActions = (record: any) => {
+    const rowState = {
+      selectedRows: [record],
+      selectedRowKeys: [record.id],
+      rowSelectMethod: undefined,
+    };
+    const buttons: Array<ActionButtonProps> = [];
+    getActionButtonProps && buttons.push(...getActionButtonProps(rowState));
+    if (onDetail || detailUri) {
+      buttons.push({
+        type: "link",
+        size: "small",
+        children: "详情",
+        onClick: () => navigate(context, rowState, onDetail, detailUri),
+      });
+    }
+    if (onEdit || editUri) {
+      buttons.push({
+        type: "link",
+        size: "small",
+        authorities: editAuthorities,
+        disabled: editDisabled ? editDisabled(rowState) : false,
+        children: "编辑",
+        onClick: () => navigate(context, rowState, onEdit, editUri),
+      });
+    }
+    if (onDelete) {
+      buttons.push({
+        type: "link",
+        size: "small",
+        danger: true,
+        authorities: delAuthorities,
+        popconfirmProps: { title: "您确定要删除该条数据吗?" },
+        children: "删除",
+        onClick: () => onDelete(record.id, rowState, () => {}),
+      });
+    }
+    return <Space size={0}>{renderButtons(buttons)}</Space>;
+  };
 
-  if (onDetail || detailUri) {
-    buttonProps.push({
-      type: "primary",
-      disabled: selectedRowKeys.length !== 1,
-      onClick: () =>
-        navigate(context, state, onDetail, detailUri),
-      children: (
-        <>
-          <InfoCircleOutlined /> 详情
-        </>
-      ),
-    });
-  }
+  // 顶部 toolbar：只保留「新增」
+  const toolbarButtons: Array<ActionButtonProps> = [];
   if (onAdd || addUri) {
-    buttonProps.push({
+    toolbarButtons.push({
       authorities: addAuthorities,
       type: "primary",
-      onClick: () => navigate(context, state, onAdd, addUri),
+      onClick: () =>
+        navigate(
+          context,
+          { selectedRows: [], selectedRowKeys: [], rowSelectMethod: undefined },
+          onAdd,
+          addUri,
+        ),
       children: (
         <>
           <PlusOutlined /> 新增
@@ -159,70 +198,25 @@ export const QueryContainer: React.FC<
       ),
     });
   }
-  if (onEdit || editUri) {
-    buttonProps.push({
-      authorities: editAuthorities,
-      disabled: editDisabled
-        ? editDisabled(state)
-        : selectedRowKeys.length !== 1,
-      type: "primary",
-      onClick: () => navigate(context, state, onEdit, editUri),
-      children: (
-        <>
-          <EditOutlined /> 编辑
-        </>
-      ),
-    });
-  }
-  if (onDelete) {
-    buttonProps.push({
-      authorities: delAuthorities,
-      danger: true,
-      disabled: selectedRowKeys.length <= 0,
-      popconfirmProps: { title: "您确定要删除该条数据吗?" },
-      onClick: () => {
-        const keys =
-          selectedRowKeys.length === 1
-            ? selectedRowKeys[0]
-            : selectedRowKeys;
-        onDelete(keys, state, () => {
-          setSelectedRows([]);
-          setSelectedRowKeys([]);
-        });
-      },
-      children: (
-        <>
-          <DeleteOutlined /> 删除
-        </>
-      ),
-    });
-  }
-
-  const actions = buttonProps
-    .filter((item) =>
-      item.authorities ? hasAuthorities(item.authorities) : true,
-    )
-    .map(({ popconfirmProps, onClick, ...item }, idx) =>
-      popconfirmProps ? (
-        <Popconfirm key={idx} {...popconfirmProps} onConfirm={onClick as any}>
-          <Button {...item} />
-        </Popconfirm>
-      ) : (
-        <Button key={idx} {...item} onClick={onClick} />
-      ),
-    );
+  const actions = renderButtons(toolbarButtons);
 
   const newRowSelection: TableRowSelection = {
     type: "radio",
     ...rowSelection,
     onChange: (keys, rows, info) => {
-      setSelectedRows(rows);
-      setSelectedRowKeys(keys as string[]);
-      setRowSelectMethod(info.type);
       const rs = rowSelection as TableRowSelection | false;
       if (rs && rs.onChange) rs.onChange(keys, rows, info);
     },
   };
+
+  const hasRowActions = !!(
+    onEdit ||
+    editUri ||
+    onDelete ||
+    onDetail ||
+    detailUri ||
+    getActionButtonProps
+  );
 
   let tableColumns = columns;
   if (detailProps) {
@@ -246,6 +240,17 @@ export const QueryContainer: React.FC<
             详情
           </a>,
         ],
+      },
+    ];
+  }
+  if (hasRowActions) {
+    tableColumns = [
+      ...tableColumns,
+      {
+        title: "操作",
+        valueType: "option",
+        fixed: "right",
+        render: (_: any, record: any) => renderRowActions(record),
       },
     ];
   }
