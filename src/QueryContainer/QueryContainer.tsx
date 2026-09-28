@@ -29,6 +29,7 @@ import type {
   RowSelectMethod,
   TableRowSelection,
 } from "antd/lib/table/interface";
+import { hasAuthorities } from "@aomi/utils";
 import { AntDesignProContext } from "../provider";
 
 export interface QueryContainerState<T> {
@@ -128,13 +129,6 @@ export const QueryContainer: React.FC<
     ...otherTable
   } = table || {};
 
-  const hasAuthorities = (authorities?: string | Array<string> | boolean) =>
-    authorities
-      ? context?.hasAuthorities
-        ? context.hasAuthorities(authorities)
-        : true
-      : true;
-
   const state = { selectedRows, selectedRowKeys, rowSelectMethod };
 
   const buttonProps: Array<ActionButtonProps> = [];
@@ -205,7 +199,9 @@ export const QueryContainer: React.FC<
   }
 
   const actions = buttonProps
-    .filter((item) => hasAuthorities(item.authorities))
+    .filter((item) =>
+      item.authorities ? hasAuthorities(item.authorities) : true,
+    )
     .map(({ popconfirmProps, onClick, ...item }, idx) =>
       popconfirmProps ? (
         <Popconfirm key={idx} {...popconfirmProps} onConfirm={onClick as any}>

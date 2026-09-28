@@ -14,12 +14,7 @@ export type Location = {
   getPathname: () => string;
 };
 
-export type AntDesignProProviderValue = Location & {
-  /**
-   * 权限判断，返回 true 表示拥有权限；不提供时默认放行。
-   */
-  hasAuthorities?: (authorities: string | string[] | boolean) => boolean;
-};
+export type AntDesignProProviderValue = Location;
 
 export const AntDesignProContext =
   React.createContext<AntDesignProProviderValue>({
