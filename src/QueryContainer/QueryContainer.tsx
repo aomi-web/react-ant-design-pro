@@ -14,13 +14,14 @@ import type {
 import {
   Button,
   ButtonProps,
+  Dropdown,
   Modal,
   ModalProps,
   Popconfirm,
   PopconfirmProps,
   Space,
 } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { DownOutlined, PlusOutlined } from "@ant-design/icons";
 import type {
   RowSelectMethod,
   TableRowSelection,
@@ -137,17 +138,18 @@ export const QueryContainer: React.FC<
         ),
       );
 
-  // 行内动作：编辑 / 删除 / 详情 / 启停 / 自定义
+  // 行内动作：编辑、详情内联；其余（删除/启停/自定义）收进「更多」下拉
   const renderRowActions = (record: any) => {
     const rowState = {
       selectedRows: [record],
       selectedRowKeys: [record.id],
       rowSelectMethod: undefined,
     };
-    const buttons: Array<ActionButtonProps> = [];
-    getActionButtonProps && buttons.push(...getActionButtonProps(rowState));
+    const inline: Array<ActionButtonProps> = [];
+    const more: Array<ActionButtonProps> = [];
+
     if (onDetail || detailUri) {
-      buttons.push({
+      inline.push({
         type: "link",
         size: "small",
         children: "详情",
@@ -155,7 +157,7 @@ export const QueryContainer: React.FC<
       });
     }
     if (onEdit || editUri) {
-      buttons.push({
+      inline.push({
         type: "link",
         size: "small",
         authorities: editAuthorities,
@@ -165,9 +167,7 @@ export const QueryContainer: React.FC<
       });
     }
     if (onDelete) {
-      buttons.push({
-        type: "link",
-        size: "small",
+      more.push({
         danger: true,
         authorities: delAuthorities,
         popconfirmProps: { title: "您确定要删除该条数据吗?" },
@@ -175,7 +175,47 @@ export const QueryContainer: React.FC<
         onClick: () => onDelete(record.id, rowState, () => {}),
       });
     }
-    return <Space size={0}>{renderButtons(buttons)}</Space>;
+    getActionButtonProps && more.push(...getActionButtonProps(rowState));
+
+    const filterFn = (item: ActionButtonProps) =>
+      item.authorities ? hasAuthorities(item.authorities) : true;
+
+    const inlineNodes = inline
+      .filter(filterFn)
+      .map(({ onClick, ...item }, idx) => (
+        <Button key={idx} {...item} onClick={onClick} />
+      ));
+
+    const moreItems = more.filter(filterFn).map((item, idx) => {
+      const { popconfirmProps, children, onClick, danger, disabled } = item;
+      const fire = () => (onClick as any)?.();
+      return {
+        key: idx,
+        label: children as any,
+        danger,
+        disabled,
+        onClick: () => {
+          if (popconfirmProps) {
+            Modal.confirm({ title: popconfirmProps.title as any, onOk: fire });
+          } else {
+            fire();
+          }
+        },
+      };
+    });
+
+    return (
+      <Space size={0}>
+        {inlineNodes}
+        {moreItems.length > 0 && (
+          <Dropdown menu={{ items: moreItems }}>
+            <Button type="link" size="small">
+              更多 <DownOutlined />
+            </Button>
+          </Dropdown>
+        )}
+      </Space>
+    );
   };
 
   // 顶部 toolbar：只保留「新增」
