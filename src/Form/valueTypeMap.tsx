@@ -70,7 +70,9 @@ export const valueTypeMap: Record<string, ProRenderFieldPropsType> = {
     formItemRender(text, props) {
       return (
         <Transfer
-          targetKeys={text}
+          // pro-components 在空值时传入的 text 是 ""，antd v6 moveTo 会
+          // concat(targetKeys) 把 "" 当成元素混入结果，这里兜底为非数组给 []
+          targetKeys={Array.isArray(text) ? text : []}
           {...props}
           {...props.fieldProps}
           render={props.fieldProps.transferRender}
