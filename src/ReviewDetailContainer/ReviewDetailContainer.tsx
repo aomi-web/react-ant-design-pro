@@ -4,7 +4,6 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { observer } from "mobx-react";
 
 import {
   BetaSchemaForm,
@@ -177,7 +176,7 @@ function renderHeader<T>({
  */
 export const ReviewDetailContainer: React.FC<
   ReviewDetailContainerProps<any>
-> = observer(function ReviewDetailContainer(
+> = function ReviewDetailContainer(
   inProps: PropsWithChildren<ReviewDetailContainerProps<any>>
 ) {
   const context = useContext(AntDesignProContext);
@@ -372,4 +371,4 @@ export const ReviewDetailContainer: React.FC<
       />
     </PageContainer>
   );
-});
+};
