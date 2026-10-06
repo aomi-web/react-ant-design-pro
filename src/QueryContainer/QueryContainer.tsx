@@ -138,8 +138,13 @@ export const QueryContainer: React.FC<
         ),
       );
 
-  // 行内动作：编辑、详情内联；其余（删除/启停/自定义）收进「更多」下拉
-  const renderRowActions = (record: any) => {
+  const openDetail = (record: any, index: number) => {
+    const nativeClick = () => setDetailConfig({ visible: true, record });
+    onRowDetail ? onRowDetail(record, index, nativeClick) : nativeClick();
+  };
+
+  // 行内动作：详情、编辑内联；其余（删除/启停/自定义）收进「更多」下拉
+  const renderRowActions = (record: any, index: number) => {
     const rowState = {
       selectedRows: [record],
       selectedRowKeys: [record.id],
@@ -148,6 +153,14 @@ export const QueryContainer: React.FC<
     const inline: Array<ActionButtonProps> = [];
     const more: Array<ActionButtonProps> = [];
 
+    if (detailProps) {
+      inline.push({
+        type: "link",
+        size: "small",
+        children: "详情",
+        onClick: () => openDetail(record, index),
+      });
+    }
     if (onDetail || detailUri) {
       inline.push({
         type: "link",
@@ -255,34 +268,11 @@ export const QueryContainer: React.FC<
     onDelete ||
     onDetail ||
     detailUri ||
+    detailProps ||
     getActionButtonProps
   );
 
   let tableColumns = columns;
-  if (detailProps) {
-    tableColumns = [
-      ...columns,
-      {
-        title: " ",
-        valueType: "option",
-        fixed: "right",
-        render: (_: any, record: any, index: number) => [
-          <a
-            key="detail"
-            onClick={() => {
-              const nativeClick = () =>
-                setDetailConfig({ visible: true, record });
-              onRowDetail
-                ? onRowDetail(record, index, nativeClick)
-                : nativeClick();
-            }}
-          >
-            详情
-          </a>,
-        ],
-      },
-    ];
-  }
   if (hasRowActions) {
     tableColumns = [
       ...tableColumns,
@@ -290,7 +280,8 @@ export const QueryContainer: React.FC<
         title: "操作",
         valueType: "option",
         fixed: "right",
-        render: (_: any, record: any) => renderRowActions(record),
+        render: (_: any, record: any, index: number) =>
+          renderRowActions(record, index),
       },
     ];
   }
