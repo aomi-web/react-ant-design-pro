@@ -32,6 +32,7 @@ export function column(input: ColumnInput): ProFormColumnsType {
     formItemProps,
     fieldProps,
     name,
+    title,
     ...rest
   } = input;
 
@@ -40,14 +41,14 @@ export function column(input: ColumnInput): ProFormColumnsType {
     valueType: valueType || type || "text",
     name,
     dataIndex: name,
-    title: label,
+    title: title ?? label,
     formItemProps: (form: any, schema: any) => {
       const next =
         typeof formItemProps === "function"
           ? formItemProps(form, schema)
           : formItemProps || {};
       const requiredRules = required
-        ? [{ required: true, message: `${label || ""} 是必填字段` }]
+        ? [{ required: true, message: `${title || label || ""} 是必填字段` }]
         : [];
       return {
         ...next,
