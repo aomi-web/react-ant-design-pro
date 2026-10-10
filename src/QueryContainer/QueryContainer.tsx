@@ -178,7 +178,9 @@ export const QueryContainer: React.FC<React.PropsWithChildren<QueryContainerProp
 
       const inlineNodes = inline
         .filter(filterFn)
-        .map(({ onClick, ...item }, idx) => <Button key={idx} {...item} onClick={onClick} />)
+        .map(({ onClick, ...item }, idx) => (
+          <Button key={idx} size="small" type="link" {...item} onClick={onClick} />
+        ))
 
       const moreItems = more.filter(filterFn).map((item, idx) => {
         const { popconfirmProps, children, onClick, danger, disabled } = item
